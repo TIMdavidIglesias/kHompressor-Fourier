@@ -1,0 +1,116 @@
+.base {
+    width: 100%;
+    border-top: 5px solid gray;
+    margin: auto;
+    text-align: center;
+    position: relative;
+    padding: 0 0 30px;
+}
+
+.holder {
+    width: 30px;
+    height: 20px;
+    background: black;
+    /* margin: auto; */
+    position: relative;
+    border-radius: 0 0 50% 50%;
+}
+
+.thread {
+    /* display: inline-block; */
+    width: 2px;
+    height: 200px;
+    background: black;
+    border-radius: 5px;
+    position: relative;
+    transform-origin: 50% 0;
+    /* animation: moveIt 2.5s ease-in-out infinite; */
+    left: 15px
+}
+
+.thread:after {
+    content: "";
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: red;
+    /* border: 2px solid white; */
+    top: 17px;
+    left: -1.7px;
+}
+
+.knob {
+    width: 10px;
+    height: 10px;
+    position: absolute;
+    top: -18px;
+    left: -4.5px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    border-bottom: 2px solid transparent;
+}
+
+.pendulum {
+    width: 20px;
+    height: 20px;
+    background: -moz-radial-gradient(circle at 70% 35%,
+            white,
+            #66d63e 30%,
+            #40a31d 50%);
+    background: -webkit-radial-gradient(circle at 70% 35%,
+            white,
+            #66d63e 30%,
+            #40a31d 50%);
+    background: -o-radial-gradient(circle at 70% 35%,
+            white,
+            #66d63e 30%,
+            #40a31d 50%);
+    background: -ms-radial-gradient(circle at 70% 35%,
+            white,
+            #66d63e 30%,
+            #40a31d 50%);
+    background: radial-gradient(circle at 70% 35%,
+            white,
+            #66d63e 30%,
+            #40a31d 50%);
+    border-radius: 50%;
+    position: absolute;
+    bottom: -10px;
+    left: -9px;
+}
+
+.shadow {
+    width: 30px;
+    height: 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    /* left: -9px; */
+    top: 20px;
+    position: relative;
+    /* animation: moveShade 1.25s ease-in-out alternate infinite; */
+}
+
+/* @keyframes moveIt {
+  0%,
+  100% {
+    transform: rotate(45deg);
+  }
+  50% {
+    transform: rotate(-45deg);
+  }
+}
+
+@keyframes moveShade {
+  0% {
+    transform: translateX(-220px) scale(1.4, 0.5);
+    filter: blur(20px);
+  }
+  50% {
+    filter: blur(3px);
+  }
+  100% {
+    transform: translateX(220px) scale(1.4, 0.5);
+    filter: blur(20px);
+  }
+} */
