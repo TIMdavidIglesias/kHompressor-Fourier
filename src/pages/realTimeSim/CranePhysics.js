@@ -9,19 +9,16 @@ import LinearSimulator from 'coreSim/jsLSA/LinearSimulator';
 // ==============================|| INCOME AREA CHART ||============================== //
 
 const CranePhysics = (props) => {
-    const { setVPlot, setXPlot, setLSimPlot, GRAVITY } = props
-
-    const [K, setK] = useState(1);
-    const [Zeta, setZeta] = useState(0.2);
+    const { setVPlot, setXPlot,YThread,setYThread, setLSimPlot, linearSimulator } = props
 
     const [v, setV] = useState(0);
     const [x, setX] = useState(0);
-    const [Y, setY] = useState(300);
+
     const [movingR, setMovingR] = useState(false);
     const [movingL, setMovingL] = useState(false);
     const [remaining, setRemaining] = useState(false);
 
-    const [linearSimulator, setLinearSimulator] = useState(new LinearSimulator(Math.sqrt(GRAVITY / Y), Zeta, K, 1, 100, GRAVITY));
+
     // setLinearSimulator(new LinearSimulator(Math.sqrt(GRAVITY/Y), Zeta, K, 1, 100, GRAVITY))
 
     let VMax = 2;
@@ -38,21 +35,21 @@ const CranePhysics = (props) => {
                 setMovingR(true);
                 setMovingL(false)
 
-                if (this.input.length === 100) {
-                    this.input.shift();
-                }
+                // if (this.input.length === 100) {
+                //     this.input.shift();
+                // }
             } else if (event.key === 'ArrowLeft') {
                 setRemaining(false)
                 setMovingL(true);
                 setMovingR(false);
 
-                if (this.input.length === 100) {
-                    this.input.shift();
-                }
+                // if (this.input.length === 100) {
+                //     this.input.shift();
+                // }
             } else if (event.key === 'ArrowUp') {
-                setY((prevY) => prevY <= 100 ? 100 : prevY - 10)
+                setYThread((prevY) => prevY <= 100 ? 100 : prevY - 10)
             } else if (event.key === 'ArrowDown') {
-                setY((prevY) => {
+                setYThread((prevY) => {
                     return prevY >= 1000 ? 1000 : prevY + 10
                 })
             }
@@ -70,8 +67,8 @@ const CranePhysics = (props) => {
                             const velocity = prevV + acceleration * deltaT;
                             const xDisplacement = prevV * deltaT + 0.5 * acceleration * deltaT * deltaT;
                             setX((prevX) => {
-                                const lSimRTRes = linearSimulator.linearSimulationRealTime((prevX + xDisplacement / 100))
-                                setLSimPlot((prevLSim) => [...prevLSim, lSimRTRes]);
+                                const lSimRTRes = linearSimulator.linearSimulationRealTime(prevX + (xDisplacement / 100))
+                                setLSimPlot(lSimRTRes);
 
                                 setXPlot((prevXPlot) => [...prevXPlot, prevX + xDisplacement])
                                 return prevX + xDisplacement
@@ -82,8 +79,8 @@ const CranePhysics = (props) => {
                             const velocity = VMax
                             const xDisplacement = VMax * (deltaT)
                             setX((prevX) => {
-                                const lSimRTRes = linearSimulator.linearSimulationRealTime(prevX + xDisplacement / 100)
-                                setLSimPlot((prevLSim) => [...prevLSim, lSimRTRes]);
+                                const lSimRTRes = linearSimulator.linearSimulationRealTime(prevX + (xDisplacement / 100))
+                                setLSimPlot(lSimRTRes);
 
                                 setXPlot((prevXPlot) => [...prevXPlot, prevX + xDisplacement])
                                 return prevX + xDisplacement
@@ -98,8 +95,8 @@ const CranePhysics = (props) => {
                             const velocity = prevV - acceleration * deltaT;
                             const xDisplacement = prevV * deltaT + 0.5 * acceleration * deltaT * deltaT;
                             setX((prevX) => {
-                                const lSimRTRes = linearSimulator.linearSimulationRealTime(prevX + xDisplacement / 100)
-                                setLSimPlot((prevLSim) => [...prevLSim, lSimRTRes]);
+                                const lSimRTRes = linearSimulator.linearSimulationRealTime(prevX + (xDisplacement / 100))
+                                setLSimPlot(lSimRTRes);
 
                                 setXPlot((prevXPlot) => [...prevXPlot, prevX + xDisplacement])
                                 return prevX + xDisplacement
@@ -107,8 +104,15 @@ const CranePhysics = (props) => {
                             setVPlot((prevVPlot) => [...prevVPlot, velocity])
                             return velocity;
                         } else {
-                            const lSimRTRes = linearSimulator.linearSimulationRealTime(x / 100)
-                            setLSimPlot((prevLSim) => [...prevLSim, lSimRTRes]);
+                            setX((prevX) => {
+                                const lSimRTRes = linearSimulator.linearSimulationRealTime(prevX)
+                                setLSimPlot(lSimRTRes);
+
+                                setXPlot((prevXPlot) => [...prevXPlot, prevX])
+                                return prevX
+                            });
+                            // const lSimRTRes = linearSimulator.linearSimulationRealTime(x / 100)
+                            // setLSimPlot(lSimRTRes);
 
 
                             const velocity = 0
@@ -199,7 +203,7 @@ const CranePhysics = (props) => {
                     <motion.div
                         className='thread'
                         style={{
-                            height: Y,
+                            height: YThread,
                         }}>
                         <div class="knob"></div>
                         <div class="pendulum"></div>

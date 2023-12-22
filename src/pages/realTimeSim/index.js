@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 import {
     Box,
@@ -12,11 +12,19 @@ import './style.css'
 import CranePhysics from './CranePhysics';
 import MainCard from 'components/MainCard';
 import SimDataPlot from './SimDataPlot';
+import LinearSimulator from 'coreSim/jsLSA/LinearSimulator';
 
 // ==============================|| INCOME AREA CHART ||============================== //
 
-const RealTimeSimulator = (props) => {
+const RealTimeSimulator =(props) => {
     const GRAVITY = 9.81
+    const [K, setK] = useState(1);
+    const [Zeta, setZeta] = useState(0.8);
+    const [YThread, setYThread] = useState(300);
+
+    const newLinearSimulator = useMemo(() => {
+        return (new LinearSimulator(Math.sqrt(GRAVITY / YThread), Zeta, K, 1, 100, GRAVITY));
+      }, [Zeta, K]);
 
     const [vPlot, setVPlot] = useState([]);
     const [xPlot, setXPlot] = useState([]);
@@ -33,7 +41,7 @@ const RealTimeSimulator = (props) => {
                             </Typography>
                         </Stack>
                         <Box sx={{ pt: 2.25 }}>
-                            {/* <SimDataPlot dataPlot={lSimPlot} plotLabel='RealTime Linear Simulation (m)' /> */}
+                            <SimDataPlot dataPlot={lSimPlot} plotLabel='RealTime Linear Simulation (m)' />
                         </Box>
                     </MainCard>
                 </Grid>
@@ -74,7 +82,7 @@ const RealTimeSimulator = (props) => {
                 <AnalyticEcommerce title="Total Sales" count="$35,078" percentage={27.4} isLoss color="warning" extra="$20,395" />
             </Grid> */}
 
-            < CranePhysics setVPlot={setVPlot} setXPlot={setXPlot} setLSimPlot={setLSimPlot} GRAVITY={GRAVITY}  />
+            < CranePhysics setVPlot={setVPlot} setXPlot={setXPlot} setLSimPlot={setLSimPlot} linearSimulator={newLinearSimulator} YThread={YThread} setYThread={setYThread} GRAVITY={GRAVITY}  />
         </>
     );
 };

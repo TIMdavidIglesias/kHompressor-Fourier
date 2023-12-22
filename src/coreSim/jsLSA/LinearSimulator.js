@@ -20,6 +20,10 @@ export default class LinearSimulator {
     this.input = []
     this.output = []
     this.Y = []
+
+    this.realTime = false;
+    this.nIteration = 0
+    this.realTimeMaxSamples = 100
   }
 
   getTransferFunctionCoefs() {
@@ -39,24 +43,33 @@ export default class LinearSimulator {
     this.output = outputConvolution(inputData, this.transferFunction, this.At);
   }
 
+  startRealTime = () => {
+    for (let i = 0; i <this.realTimeMaxSamples; i++) {
+      this.output[i] = new Array(this.realTimeMaxSamples).fill(0);
+      // this.Y.push(0);
+    }
+  }
+
   linearSimulationRealTime(input) {
-    let u1 = 0;
-    let u0 = 0;
-    let u = 0;
+    this.nIteration+=1
 
-    const newArrayData = [...this.input, input]
+    if (!this.realTime) {
+      this.startRealTime();
+      this.realTime= true;
+    }
 
-    // if (this.input.length === 100) {
-    //   this.input.shift();
-    // }
-
+    if(this.nIteration > this.realTimeMaxSamples){
+      this.input.shift();
+    }
     this.input.push(input);
 
-    const inputN = this.input.length;
-    let stepOutput = 0;
+    const outputRTData = outputConvolutionRT(input, this.input[this.input.length - 2] || 0, this.output, this.Y, this.transferFunction, this.At, this.nIteration)
+    this.Y = outputRTData.Y
+    this.output = outputRTData.output
 
-    const outputRT = outputConvolutionRT(newArrayData, this.output, this.Y, this.transferFunction, this.At)
-    console.log(outputRT)
+    // console.log(outputRTData)
+
+    return this.Y
     // for (let i = 0; i < inputN; i++) {
     //   u1 = this.input[i];
     //   u = u1;
@@ -79,8 +92,9 @@ export default class LinearSimulator {
     //   }
     // }
 
-    this.input = newArrayData
+    // this.input = newArrayData
 
-    return stepOutput;
+    // return stepOutput;
+
   }
 }
