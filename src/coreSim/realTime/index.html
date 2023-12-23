@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="controls/sliders.css">
+    <style>
+        h2 {
+            /* margin-bottom:20px */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid mt-2">
+        <div class="row">
+            <div class="col-md-12">
+                <div style="height: 100%;">
+                    <div class="base" id="base">
+                        <div class="holder" id="holder">
+                            <div class="thread" id="thread">
+                                <div class="knob"></div>
+                                <div class="pendulum"></div>
+                            </div>
+                            <div class="shadow" id="shadow"></div>
+                        </div>
+                    </div>
+                    <canvas id="lSimChart"></canvas></canvas>
+                </div>
+            </div>
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form">
+                                    <label for="ampliff">ampliff/Gain</label>
+                                    <input id="ampliff" name="ampliff" type="range" min="1" max="10" value="1">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form">
+                                    <label for="zeta">Viscosity Coeff (ζ)</label>
+                                    <input name="zeta" id="zeta" type="range" min="1" max="99" value="20">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form">
+                                    <label for="Wn">Natural freq. (ωn)</label>
+                                    <input name="Wn" id="Wn" type="range" min="10" max="50" value="20">
+                                </div>
+                            </div>
+                            <!-- <div class="col-md-3">
+                                <div class="form">
+                                    <label for="samplingDisplay">Sampling Display Time</label>
+                                    <input name="samplingDisplay" id="samplingDisplay" type="range" min="100" max="1000"
+                                        value="500">
+                                </div>
+                            </div> -->
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="jsLSA/LinearSimulation.js"></script>
+    <script src="jsLSA/SecondOrder.js"></script>
+    <script src="jsLSA/Convolution.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        var bogie = document.getElementById('holder');
+        var base = document.getElementById('base');
+        var shadow = document.getElementById('shadow');
+
+        var xPlot = []
+        var tPlot = []
+        var lSimPlot = []
+
+        // lSimChart
+        const lSimChart = document.getElementById('lSimChart');
+        const lSimChartObj = new Chart(lSimChart, {
+            type: 'line',
+            data: {
+                labels: tPlot,
+                datasets: [{
+                    label: 'Input',
+                    data: xPlot,
+                    borderWidth: 1
+                },
+                {
+                    label: 'RealTime Output',
+                    data: [],
+                    borderWidth: 1
+                }
+                ]
+            },
+            options: {
+                animation: {
+                    duration: 0
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        const GRAVITY = 9.8;
+
+
+        let YThread = 5
+
+        let cachedK = 1
+        let cachedZeta = 0.4
+        let cachedAt = 0.01
+        let cachedSDisplay = 500
+        let cachedWn= 20
+
+        var linearSimulator = new LinearSimulator(cachedWn, cachedZeta, cachedK, cachedAt, GRAVITY)
+
+        var w = base.offsetWidth;
+        var h = base.offsetHeight;
+
+        var keyState = {};
+
+        let V = 0
+        let X = 0
+        let LSim = 0
+
+        let remaining = 0
+
+        let VMax = 10;
+        let acceleration = 4
+        let scenarioTimeInterval = 2;
+        let deltaT = cachedAt;
+
+        let baseLong = 10
+        let frameRate = 0
+
+        let maxIntegrationSamples = 2000
+        let roundCounter = 0
+
+        let subCounter = 0
+        let shiftCounter = 0
+
+
+        function animate() {
+            var K = parseInt(document.getElementById('ampliff').value);
+            var Zeta = parseFloat(document.getElementById('zeta').value) / 100;
+            var Wn = parseFloat(document.getElementById('Wn').value) / 10;
+
+            if (cachedK !== K) {
+                linearSimulator.setTransferFunctionData('K', K)
+                cachedK = K
+            }
+
+            if (cachedZeta !== Zeta) {
+                linearSimulator.setTransferFunctionData('Zeta', Zeta)
+                cachedZeta = Zeta
+            }
+
+            if (cachedWn!== Wn) {
+                linearSimulator.setTransferFunctionData('Wn', Wn)
+                cachedWn = Wn
+            }
+
+            if (tPlot.length > (cachedSDisplay)) {
+                tPlot.shift()
+                tPlot.push((roundCounter * deltaT).toFixed(3))
+
+            } else {
+                tPlot.push((roundCounter * deltaT).toFixed(3))
+
+            }
+
+            w = base.offsetWidth
+            h = base.offsetHeight;
+            frameRate = (w - 35) / baseLong
+
+            if (keyState['ArrowLeft']) {
+                if (V > -VMax) {
+                    const velocity = (V - acceleration * deltaT);
+                    const xDisplacement = V * deltaT + 0.5 * acceleration * deltaT * deltaT;
+                    V = velocity
+
+                    linearSimulator.linearSimulationRealTime(X + (xDisplacement))
+                    X += xDisplacement
+                } else {
+                    remaining = 0
+                    const velocity = -VMax
+                    const xDisplacement = -VMax * (deltaT)
+                    V = velocity
+
+                    linearSimulator.linearSimulationRealTime(X + (xDisplacement))
+                    X += xDisplacement
+                }
+            } else if (keyState['ArrowRight']) {
+                if (V < VMax) {
+                    const velocity = (V + acceleration * deltaT);
+                    const xDisplacement = V * deltaT + 0.5 * acceleration * deltaT * deltaT;
+                    V = velocity
+
+                    linearSimulator.linearSimulationRealTime(X + (xDisplacement))
+                    X += xDisplacement
+                } else {
+                    const velocity = VMax
+                    const xDisplacement = VMax * (deltaT)
+                    V = velocity
+
+                    linearSimulator.linearSimulationRealTime(X + (xDisplacement))
+                    X += xDisplacement
+                }
+            } else {
+                if (V > 0) {
+                    const velocity = (V - (acceleration * deltaT));
+                    const xDisplacement = (V) * deltaT + (0.5 * acceleration * deltaT * deltaT);
+                    V = velocity
+
+                    if (V < 0.01) {
+                        V = 0
+                    }
+
+                    linearSimulator.linearSimulationRealTime(X + (xDisplacement))
+                    X += xDisplacement
+                } else if (0 > V) {
+                    const velocity = (V + (acceleration * deltaT));
+                    const xDisplacement = (V) * deltaT + (0.5 * acceleration * deltaT * deltaT) * -remaining;
+                    V = velocity
+
+                    if (0.01 < V) {
+                        V = 0
+                    }
+
+                    linearSimulator.linearSimulationRealTime(X + (xDisplacement))
+                    X += xDisplacement
+                } else {
+                    V = 0
+                    remaining = 0
+                    linearSimulator.linearSimulationRealTime(X)
+                }
+            }
+
+            if (X <= 0) {
+                X = 0
+                V = 0
+            } else if (X >= 10 && !keyState['ArrowLeft']) {
+                X = 10
+                V = 0
+            }
+
+            if (xPlot.length > (cachedSDisplay - 1)) {
+                xPlot.shift()
+                xPlot.push(X)
+            } else {
+                xPlot.push(X)
+            }
+
+            if (subCounter > 1) {
+                subCounter = 0
+                lSimChartObj.data.labels.data = tPlot
+                lSimChartObj.data.datasets[0].data = xPlot.slice(-cachedSDisplay)
+                lSimChartObj.data.datasets[1].data = linearSimulator.output.slice(-cachedSDisplay)
+                lSimChartObj.update()
+            }
+
+            const lSimRes = (-X + linearSimulator.output[maxIntegrationSamples - 1 > roundCounter ? roundCounter : maxIntegrationSamples])
+
+            const angle = Math.atan(lSimRes / YThread)
+
+            bogie.style.left = (X) * (frameRate) + 'px';
+            thread.style.height = (h / 10) * (YThread * 20) + 'px';
+            thread.style.rotate = (-angle) + 'rad';
+            shadow.style.left = lSimRes * (frameRate) + 'px';
+
+            roundCounter++
+            subCounter++
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('keydown', function (e) {
+            keyState[e.key || e.which] = true;
+        }, true);
+        window.addEventListener('keyup', function (e) {
+            keyState[e.key || e.which] = false;
+        }, true);
+
+        animate();
+    </script>
+    <script src="controls/sliders.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+
+</body>
+
+</html>

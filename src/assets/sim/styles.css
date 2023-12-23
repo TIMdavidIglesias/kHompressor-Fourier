@@ -25,7 +25,9 @@
     position: relative;
     transform-origin: 50% 0;
     /* animation: moveIt 2.5s ease-in-out infinite; */
-    left: 15px
+    left: 15px;
+    /* top: -20px; */
+    
 }
 
 .thread:after {

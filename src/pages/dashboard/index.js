@@ -33,8 +33,6 @@ import Switch from '@mui/material/Switch';
 import OscillatorChart from './OscillatorChart';
 import SinusoidSetup from './SinusoidSetup';
 
-import AnalyticEcommerce from 'components/cards/statistics/AnalyticEcommerce';
-
 // assets
 import StepRampSetup from './StepRampSetup';
 import TriangleSawSetup from './TriangleSawSetup';
@@ -100,9 +98,12 @@ const DashboardDefault = () => {
   const [selectedOscillatorRef, setSelectedOscillatorRef] = useState(newOscRef);
 
   const handleModalOpen = () => {
-    setOpenModal(!openModal);
+    if(openModal){
     setOpenSettings(false);
     setOpenSimulationSettings(false);
+    }
+    setOpenModal(!openModal);
+
   };
 
   const handleSettingsOpen = () => {

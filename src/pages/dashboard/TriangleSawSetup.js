@@ -49,7 +49,7 @@ const TriangleSawSetup = (props) => {
         let p = 0
 
         // delay
-        for (let nt = 0; nt < nDelayFrames; nt++) {
+        for (let nt = 0; nt < nDelayFrames+1; nt++) {
             delayP.push(0)
         }
 

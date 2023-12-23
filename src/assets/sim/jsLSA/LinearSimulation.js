@@ -1,8 +1,8 @@
-import { outputConvolution, outputConvolutionRT } from './Convolution';
-import SecondOrder from './SecondOrder'
+// import { outputConvolution, outputConvolutionRT } from './Convolution';
+// import SecondOrder from './SecondOrder'
 
-export default class LinearSimulator {
-  constructor(Wn, Zeta, K, maxTime, sampleRate, GRAVITY) {
+class LinearSimulator {
+  constructor(Wn, Zeta, K, At, GRAVITY) {
     // transfer function
     this.Wn = Wn;
     this.Zeta = Zeta;
@@ -12,10 +12,10 @@ export default class LinearSimulator {
 
     // consts
     this.GRAVITY = GRAVITY;
-    this.At =maxTime / sampleRate;
+    this.At =At;
 
     this.step_input = [];
-    this.sim_time = maxTime * sampleRate;
+    // this.sim_time = maxTime * sampleRate;
 
     this.input = []
     this.output = []
@@ -23,7 +23,7 @@ export default class LinearSimulator {
 
     this.realTime = false;
     this.nIteration = 0
-    this.realTimeMaxSamples = 100
+    this.realTimeMaxSamples = 2000
   }
 
   getTransferFunctionCoefs() {
@@ -36,6 +36,7 @@ export default class LinearSimulator {
 
   setTransferFunctionData(propName, value) {
     this[propName] = value;
+    this.transferFunction[propName] = value
   }
 
   linearSimulation(inputData) {
@@ -58,7 +59,7 @@ export default class LinearSimulator {
     //   this.realTime= true;
     // }
 
-    if(this.input.length > this.realTimeMaxSamples){
+    if(this.input.length > this.realTimeMaxSamples-1){
       this.input.shift();
       this.output.shift();
     }

@@ -43,7 +43,44 @@ export const outputConvolution = (inputs, transferFunction, At) => {
   return _columnOutputReader(Y, nIterations);
 }
 
-export const outputConvolutionRT = (u1, u0, output, Y, transferFunction, At, nIteration) => {
+export const outputConvolutionRT = (inputs, transferFunction, At) => {
+  const nIterations = inputs.length;
+
+  let u = 0
+  let u0 = 0
+  let u1 = 0
+
+  const deltaT = At;
+
+  const Zeta = transferFunction.Zeta;
+  const Wn = transferFunction.Wn;
+  const K = transferFunction.K;
+  const damping = transferFunction.damping;
+
+let output = 0
+
+  for (let i = 0; i < nIterations; i++) {
+    u1 = inputs[i]
+    u = u1
+
+    if (i > 0) {
+      u0 = inputs[i - 1]
+
+      if (u1 != u0) {
+        u = u1 - u0
+        const t = (inputs.length - i) * deltaT
+        output +=  K * (u - u * ((Math.exp(-Zeta * Wn * t)) * (Math.cos(Wn * damping * t) + (Zeta / damping) * Math.sin(Wn * damping * t))))
+      }
+      else { output += 0 }
+    }else{
+      const t  = (inputs.length - i) * deltaT
+      output +=  K * (u - u * ((Math.exp(-Zeta * Wn * t)) * (Math.cos(Wn * damping * t) + (Zeta / damping) * Math.sin(Wn * damping * t))))
+    }
+  }
+  return output
+}
+
+export const outputConvolutionRT2 = (u1, u0, input, output, Y, transferFunction, At, nIteration) => {
   const maxIterations = output.length;
   const deltaT = At;
 
@@ -59,6 +96,7 @@ export const outputConvolutionRT = (u1, u0, output, Y, transferFunction, At, nIt
   let newOutput = [...output]
 
   let u = 0// u1 - u0;
+  let newY = [...Y]
 
   if (nIteration > maxIterations) {
     newOutput.shift()
@@ -80,20 +118,33 @@ export const outputConvolutionRT = (u1, u0, output, Y, transferFunction, At, nIt
 
 
       // if(r< fLimit-1){
-      const t = (nIteration + r - maxIterations)//*deltaT
-      newOutput[r][maxIterations - 1] = t// K * (u - u * ((Math.exp(-Zeta * Wn * t)) * (Math.cos(Wn * damping * t) + (Zeta / damping) * Math.sin(Wn * damping * t))))
+      const t = (nIteration + r - maxIterations) * deltaT
+      newOutput[r][maxIterations - 1] = K * (u - u * ((Math.exp(-Zeta * Wn * t)) * (Math.cos(Wn * damping * t) + (Zeta / damping) * Math.sin(Wn * damping * t))))
+
+      // let instantY = newOutput[r][maxIterations - 1]
+      // newY[r] = instantY
+      // newY[r]=
+
       // }else{
       //   newOutput[r][maxIterations - 1] = 0
       // }
 
       // newOutput[r][maxIterations-2]=r
     } else {
-      const t = r//*deltaT
-      newOutput[r][fLimit-1] = t//K * (u - u * ((Math.exp(-Zeta * Wn * t)) * (Math.cos(Wn * damping * t) + (Zeta / damping) * Math.sin(Wn * damping * t))))
+      const t = r * deltaT
+      newOutput[r][fLimit - 1] = K * (u - u * ((Math.exp(-Zeta * Wn * t)) * (Math.cos(Wn * damping * t) + (Zeta / damping) * Math.sin(Wn * damping * t))))
+
+      // for (let c = 0; c < maxIterations; r++) {
+      //   newY[r] += newOutput[r][c]
+      // }
     }
 
   }
-
+  // for (let r = 0; r < maxIterations; r++) {
+  //   for (let c = 0; c < maxIterations; r++) {
+  //     // newY[r] += newOutput[r][c]
+  //   }
+  // }
   // for (let r = 0; r < fLimit; r++) {
   //   if (nIteration === 1) {
   //     u = 0;
@@ -135,18 +186,40 @@ export const outputConvolutionRT = (u1, u0, output, Y, transferFunction, At, nIt
 
   // // Y.push(yTemp)
   // // yTemp = []
-  let instantY = 0
-  
-  // for (let n = 0; n < maxIterations; n++) {
-    instantY = _columnOutputReader(newOutput,maxIterations)
-  // }
+  // let instantY = 0
+
+  // // for (let n = 0; n < maxIterations; n++) {
+  //   instantY = _columnOutputReaderRT(newOutput,maxIterations,Y)
+  // // }
 
 
   return {
-    Y: instantY,
+    Y: _columnOutputReaderRT(newOutput, maxIterations, input),
     output: newOutput,
   }
   // return _columnOutputReader(Y, nIterations);
+}
+
+const _columnOutputReaderRT = (y0, nIterations, inputs) => {
+  let newY = []
+
+  const y = [];
+  let col_sum = 0;
+
+  for (let i = 0; i < nIterations; i++) {
+    for (let j = 0; j < nIterations; j++) {
+      col_sum += y0[j][i]
+
+      // console.log(`cs:${col_sum}`)
+      // console.log(`x:${col_sum}`)
+    }
+    Number.isNaN(col_sum) && console.log(y0[i])
+    // console.log(y0[i].length)
+    y.push(col_sum + inputs[i]);
+    col_sum = 0;
+  }
+
+  return y
 }
 
 const _columnOutputReader = (y0, nIterations) => {
